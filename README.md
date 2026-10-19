@@ -22,16 +22,29 @@ Modern Security Operations Centers (SOCs) drown in disconnected alert logs, stat
 ## 🛰️ Key Features
 
 ### 1. Interactive 60FPS Attack Blast-Radius Graph
-- **Force-Directed Topology**: Dynamic HTML5 Canvas rendering internal subnets (Perimeter DMZ, Corp Workstations, Core Infrastructure, Cloud VPCs) and external C2 nodes.
-- **Particle Packet Flow**: Real-time packet pulses traveling across edges, color-coded by malicious severity and protocol.
-- **Visual Containment Firewalls**: Quarantined hosts and severed edges trigger dynamic laser barrier cross-outs and defense shields.
-- **Interactive Controls**: Drag-and-drop nodes, smooth pan, zoom controls, and instant node inspection.
+- **Subnet Enclaves**: Visualized strategic zones (Zone 01 External C2, Zone 02 Perimeter DMZ, Zone 03 Corp Workstations, Zone 04 Active Directory Core, Zone 05 AWS Cloud Vault) with glowing boundary halos.
+- **Rotating Cyber Radar Sweep**: Ambient 60FPS radar beam providing continuous situational telemetry.
+- **Honeycomb Laser Shields**: Quarantined hosts generate animated hexagonal containment shields with severed socket barriers.
+- **Optimized Layout**: Symmetrical hierarchical positioning preventing label overlap.
 
-### 2. Time-Travel Flight Recorder
+### 2. Holographic Global Cyber War Map
+- **3D-Projected Vector World Map**: High-tech vector world map displaying global adversary command nodes (Moscow, Bucharest, Pyongyang) and enterprise targets (Washington DC, Ashburn AWS us-east-1, Frankfurt, Tokyo, San Francisco).
+- **Parabolic Ballistic Attack Arcs**: Real-time ballistic cyber attacks curving across continents with glowing pulse heads and exfiltration metrics.
+- **Live Intercept Ticker**: Scrolling real-time telemetry stream showing origin/destination IPs, attack payloads, and throughput (MB/s).
+
+### 3. Native Memory Disassembler & x86 Opcodes
+- **x86_64 Instruction Disassembly**: Disassembles PE section `.text` shellcode opcodes (`VirtualAllocEx`, `GetProcAddress`, `REP MOVSB`, `JMP RAX`).
+- **Register State Dump**: Live inspection of `RAX`, `RBX`, `RCX`, `RDX`, `RSP`, `RIP`.
+- **Heuristic Exploit Detector**: Flags suspicious in-memory process hollowing hooks.
+
+### 4. Interactive SPECTER//SHELL CLI
+- **Privileged Forensic Terminal**: Integrated command drawer (`~ specter-ops > `).
+- **Tactical Commands**: `scan` (runs cluster-wide EDR scan), `auto-contain` (triggers emergency lockdown), `decrypt <payload>`, `dossier`, `status`.
+
+### 5. Time-Travel Flight Recorder
 - **Chronological Attack Replay**: Scrub backward and forward through the attack lifecycle millisecond by millisecond.
 - **Variable Playback Speeds**: 0.5x, 1x, 2x, and 5x real-time simulation rates.
 - **Milestone Navigation**: Interactive timeline track with clickable severity milestone anchors.
-- **Event Synchronization**: Automatically updates node compromise states, edge paths, and telemetry logs as ticks progress.
 
 ### 3. Shannon Entropy & Cryptanalysis Lab
 - **Mathematical Entropy Engine**: Calculates Shannon entropy:
