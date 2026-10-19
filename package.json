@@ -1,0 +1,22 @@
+{
+  "name": "specter-ops",
+  "version": "1.0.0",
+  "description": "SPECTER//OPS - Cyber Threat Flight Recorder & Autonomous Incident Workbench",
+  "private": true,
+  "scripts": {
+    "backend": "python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --reload",
+    "frontend": "npm run dev --prefix frontend",
+    "test:backend": "python -m pytest backend/tests -v",
+    "build:frontend": "npm run build --prefix frontend"
+  },
+  "keywords": [
+    "cybersecurity",
+    "threat-intelligence",
+    "soc",
+    "mitre-attack",
+    "shannon-entropy",
+    "incident-response"
+  ],
+  "author": "Antigravity Engineering",
+  "license": "MIT"
+}
