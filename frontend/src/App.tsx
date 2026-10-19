@@ -19,12 +19,15 @@ import {
   triggerAutoContainment,
 } from "./services/api";
 import { AttackGraph } from "./components/AttackGraph";
+import { CyberWarMap } from "./components/CyberWarMap";
 import { MitreMatrix } from "./components/MitreMatrix";
+import { MemoryDisassembler } from "./components/MemoryDisassembler";
 import { PayloadInspector } from "./components/PayloadInspector";
 import { FlightRecorder } from "./components/FlightRecorder";
 import { ThreatFeedSidebar } from "./components/ThreatFeedSidebar";
 import { PacketConsoleSidebar } from "./components/PacketConsoleSidebar";
 import { ForensicDossierModal } from "./components/ForensicDossierModal";
+import { SpecterTerminal } from "./components/SpecterTerminal";
 import { audioEngine } from "./services/audioEngine";
 import {
   Shield,
@@ -38,22 +41,25 @@ import {
   Radio,
   Wifi,
   WifiOff,
+  Globe,
+  Cpu,
+  Terminal,
 } from "lucide-react";
 
 export const App: React.FC = () => {
   const [state, setState] = useState<SimulationState | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioMetadata[]>([]);
   const [selectedNode, setSelectedNode] = useState<AttackNode | null>(null);
-  const [activeTab, setActiveTab] = useState<"topology" | "mitre" | "entropy">("topology");
+  const [activeTab, setActiveTab] = useState<"topology" | "warmap" | "mitre" | "memory" | "entropy">("topology");
   const [inspectorPayload, setInspectorPayload] = useState<string | null>(null);
   const [isDossierOpen, setIsDossierOpen] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [wsConnected, setWsConnected] = useState(false);
   const [containmentAlert, setContainmentAlert] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
 
-  // Initialize data
   useEffect(() => {
     loadInitialData();
     setupWebSocket();
@@ -102,13 +108,12 @@ export const App: React.FC = () => {
             audioEngine.playContainmentLock();
           }
         } catch {
-          // Non-JSON ping
+          // Ignore
         }
       };
 
       ws.onclose = () => {
         setWsConnected(false);
-        // Attempt reconnection after 3 seconds
         setTimeout(setupWebSocket, 3000);
       };
 
@@ -120,7 +125,6 @@ export const App: React.FC = () => {
     }
   };
 
-  // Toggle Sound FX
   const toggleSound = () => {
     const next = !soundEnabled;
     setSoundEnabled(next);
@@ -128,7 +132,6 @@ export const App: React.FC = () => {
     if (next) audioEngine.playClick(1500);
   };
 
-  // Switch Scenario
   const handleSelectScenario = async (scId: string) => {
     audioEngine.playClick(1100);
     try {
@@ -142,7 +145,6 @@ export const App: React.FC = () => {
     }
   };
 
-  // Transport handlers
   const handlePlay = async () => {
     try {
       await playSimulation();
@@ -206,7 +208,6 @@ export const App: React.FC = () => {
     }
   };
 
-  // Tactical Containment
   const handleIsolateNode = async (nodeId: string) => {
     try {
       const res = await isolateNode(nodeId);
@@ -240,21 +241,20 @@ export const App: React.FC = () => {
     audioEngine.playClick(1600);
   }, []);
 
-  // Compute Defcon Level
   const compromisedCount = state?.nodes.filter(
     (n) => n.status === "compromised" || n.status === "exfiltrating"
   ).length || 0;
   const defconLevel = compromisedCount >= 3 ? 1 : compromisedCount >= 2 ? 2 : compromisedCount >= 1 ? 3 : 5;
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-black text-slate-100 overflow-hidden select-none">
+    <div className={`w-screen h-screen flex flex-col bg-black text-slate-100 overflow-hidden select-none ${defconLevel === 1 ? "red-alert-vignette" : ""}`}>
       {/* 1. TOP COMMAND HUD BAR */}
-      <header className="h-14 bg-slate-950 border-b border-slate-800 px-4 flex items-center justify-between z-20">
+      <header className="h-14 bg-slate-950 border-b border-slate-800 px-4 flex items-center justify-between z-20 backdrop-blur-xl">
         {/* Brand & Live Indicator */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-cyan-500/10 border border-cyan-400 flex items-center justify-center text-cyan-400 shadow-md shadow-cyan-500/20">
-              <Shield size={18} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-400 flex items-center justify-center text-cyan-400 shadow-lg shadow-cyan-500/30">
+              <Shield size={20} className="text-cyan-400" />
             </div>
             <div>
               <h1 className="text-sm font-mono font-bold tracking-widest text-white uppercase flex items-center gap-2">
@@ -262,7 +262,7 @@ export const App: React.FC = () => {
               </h1>
               <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>CYBER THREAT FLIGHT RECORDER</span>
+                <span className="text-emerald-400 font-bold">CYBER WAR COCKPIT</span>
               </div>
             </div>
           </div>
@@ -271,11 +271,11 @@ export const App: React.FC = () => {
 
           {/* Scenario Selector Dropdown */}
           <div className="hidden md:flex items-center gap-2 font-mono text-xs">
-            <span className="text-slate-500">SCENARIO:</span>
+            <span className="text-slate-500 font-bold">SCENARIO:</span>
             <select
               value={state?.scenario.id || "red_eclipse"}
               onChange={(e) => handleSelectScenario(e.target.value)}
-              className="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-cyan-300 rounded px-2.5 py-1 text-xs font-mono focus:outline-none focus:border-cyan-400 cursor-pointer"
+              className="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-cyan-300 rounded px-2.5 py-1 text-xs font-mono focus:outline-none focus:border-cyan-400 cursor-pointer shadow-inner"
             >
               {scenarios.map((sc) => (
                 <option key={sc.id} value={sc.id}>
@@ -288,16 +288,28 @@ export const App: React.FC = () => {
 
         {/* Center / Right HUD Actions */}
         <div className="flex items-center gap-3">
+          {/* Animated Cyber Audio Spectrum Visualizer */}
+          <div className="hidden xl:flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800">
+            <span className="text-[10px] font-mono text-slate-500">TELEMETRY AUDIO</span>
+            <div className="soundwave-container">
+              <div className="soundwave-bar"></div>
+              <div className="soundwave-bar"></div>
+              <div className="soundwave-bar"></div>
+              <div className="soundwave-bar"></div>
+              <div className="soundwave-bar"></div>
+            </div>
+          </div>
+
           {/* Defcon Gauge */}
-          <div className="hidden sm:flex items-center gap-2 bg-slate-900 px-2.5 py-1 rounded border border-slate-800 text-xs font-mono">
-            <span className="text-slate-500">DEFCON:</span>
+          <div className="hidden sm:flex items-center gap-2 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800 text-xs font-mono">
+            <span className="text-slate-500 font-bold">DEFCON:</span>
             <span
               className={`font-bold ${
                 defconLevel === 1
-                  ? "text-rose-500 animate-pulse"
+                  ? "text-rose-500 text-glow-rose animate-pulse"
                   : defconLevel === 2
                   ? "text-amber-400"
-                  : "text-cyan-400"
+                  : "text-cyan-400 text-glow-cyan"
               }`}
             >
               LEVEL {defconLevel}
@@ -311,19 +323,34 @@ export const App: React.FC = () => {
                 ? "bg-emerald-950/20 border-emerald-800 text-emerald-400"
                 : "bg-slate-900 border-slate-800 text-slate-500"
             }`}
-            title={wsConnected ? "WebSocket Live Stream Active" : "WebSocket Disconnected (Polling)"}
           >
             {wsConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
-            <span>{wsConnected ? "STREAM" : "OFFLINE"}</span>
+            <span>{wsConnected ? "STREAM ONLINE" : "OFFLINE"}</span>
           </div>
 
           {/* Audio FX Toggle */}
           <button
             onClick={toggleSound}
             title={soundEnabled ? "Mute Cyber Audio FX" : "Unmute Cyber Audio FX"}
-            className="p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded transition"
+            className="p-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg transition"
           >
             {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          </button>
+
+          {/* Terminal Toggle Button */}
+          <button
+            onClick={() => {
+              setIsTerminalOpen((prev) => !prev);
+              audioEngine.playClick(1400);
+            }}
+            className={`p-1.5 rounded-lg border transition text-xs font-mono flex items-center gap-1.5 ${
+              isTerminalOpen
+                ? "bg-cyan-500/20 border-cyan-400 text-cyan-300"
+                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+            }`}
+          >
+            <Terminal size={15} />
+            <span className="hidden md:inline">Shell</span>
           </button>
 
           {/* Export Incident Dossier */}
@@ -340,7 +367,7 @@ export const App: React.FC = () => {
           {/* Master Autonomous Containment Button */}
           <button
             onClick={handleAutoContainment}
-            className="btn-danger text-xs font-bold"
+            className="btn-danger text-xs font-bold shadow-lg"
           >
             <ShieldAlert size={14} /> AUTONOMOUS CONTAINMENT
           </button>
@@ -383,9 +410,9 @@ export const App: React.FC = () => {
                   setActiveTab("topology");
                   audioEngine.playClick(1200);
                 }}
-                className={`px-3 py-1 text-xs font-mono rounded flex items-center gap-1.5 transition ${
+                className={`px-3 py-1 text-xs font-mono rounded-lg flex items-center gap-1.5 transition ${
                   activeTab === "topology"
-                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 font-bold"
+                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 font-bold shadow-md shadow-cyan-950/50"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -394,16 +421,44 @@ export const App: React.FC = () => {
 
               <button
                 onClick={() => {
-                  setActiveTab("mitre");
+                  setActiveTab("warmap");
                   audioEngine.playClick(1300);
                 }}
-                className={`px-3 py-1 text-xs font-mono rounded flex items-center gap-1.5 transition ${
-                  activeTab === "mitre"
-                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 font-bold"
+                className={`px-3 py-1 text-xs font-mono rounded-lg flex items-center gap-1.5 transition ${
+                  activeTab === "warmap"
+                    ? "bg-rose-500/10 text-rose-400 border border-rose-500/40 font-bold shadow-md shadow-rose-950/50"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Activity size={13} /> MITRE ATT&CK MATRIX
+                <Globe size={13} /> GLOBAL WAR MAP
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab("mitre");
+                  audioEngine.playClick(1300);
+                }}
+                className={`px-3 py-1 text-xs font-mono rounded-lg flex items-center gap-1.5 transition ${
+                  activeTab === "mitre"
+                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 font-bold shadow-md shadow-cyan-950/50"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Activity size={13} /> MITRE ATT&CK
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab("memory");
+                  audioEngine.playClick(1350);
+                }}
+                className={`px-3 py-1 text-xs font-mono rounded-lg flex items-center gap-1.5 transition ${
+                  activeTab === "memory"
+                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/40 font-bold shadow-md shadow-amber-950/50"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Cpu size={13} /> MEMORY DISASM
               </button>
 
               <button
@@ -411,13 +466,13 @@ export const App: React.FC = () => {
                   setActiveTab("entropy");
                   audioEngine.playClick(1400);
                 }}
-                className={`px-3 py-1 text-xs font-mono rounded flex items-center gap-1.5 transition ${
+                className={`px-3 py-1 text-xs font-mono rounded-lg flex items-center gap-1.5 transition ${
                   activeTab === "entropy"
-                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 font-bold"
+                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 font-bold shadow-md shadow-cyan-950/50"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Binary size={13} /> ENTROPY & CRYPTANALYSIS
+                <Binary size={13} /> CRYPTANALYSIS
               </button>
             </div>
 
@@ -438,6 +493,8 @@ export const App: React.FC = () => {
               />
             )}
 
+            {activeTab === "warmap" && <CyberWarMap />}
+
             {activeTab === "mitre" && (
               <MitreMatrix
                 events={state?.past_events || []}
@@ -445,10 +502,21 @@ export const App: React.FC = () => {
               />
             )}
 
+            {activeTab === "memory" && <MemoryDisassembler />}
+
             {activeTab === "entropy" && (
               <PayloadInspector initialPayload={inspectorPayload} />
             )}
           </div>
+
+          {/* Interactive Shell Terminal Drawer */}
+          <SpecterTerminal
+            isOpen={isTerminalOpen}
+            onClose={() => setIsTerminalOpen(false)}
+            onAutoContain={handleAutoContainment}
+            onOpenDossier={() => setIsDossierOpen(true)}
+            onInspectPayload={handleInspectPayload}
+          />
 
           {/* Flight Recorder Bottom Control Bar */}
           <FlightRecorder

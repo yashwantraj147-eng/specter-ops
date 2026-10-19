@@ -261,3 +261,75 @@ html, body, #root {
 .animate-pulse-subtle {
   animation: pulse-subtle 2s infinite ease-in-out;
 }
+
+/* Cyber Audio Soundwave Spectrum Bars */
+.soundwave-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+}
+
+.soundwave-bar {
+  width: 3px;
+  background: var(--cyan-neon);
+  border-radius: 1px;
+  animation: soundwave-jump 1.2s ease-in-out infinite;
+}
+
+.soundwave-bar:nth-child(1) { height: 30%; animation-delay: 0.1s; }
+.soundwave-bar:nth-child(2) { height: 75%; animation-delay: 0.3s; }
+.soundwave-bar:nth-child(3) { height: 100%; animation-delay: 0.5s; }
+.soundwave-bar:nth-child(4) { height: 50%; animation-delay: 0.2s; }
+.soundwave-bar:nth-child(5) { height: 85%; animation-delay: 0.4s; }
+
+@keyframes soundwave-jump {
+  0%, 100% { transform: scaleY(0.3); opacity: 0.5; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+/* Honeycomb tactical grid background */
+.bg-honeycomb {
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px, 32px 32px;
+}
+
+/* Red Alert CRT Vignette */
+.red-alert-vignette {
+  box-shadow: inset 0 0 100px rgba(255, 42, 95, 0.35);
+  animation: alert-flash 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes alert-flash {
+  0% { box-shadow: inset 0 0 60px rgba(255, 42, 95, 0.2); }
+  100% { box-shadow: inset 0 0 120px rgba(255, 42, 95, 0.5); }
+}
+
+/* Neon laser glowing text */
+.text-glow-cyan {
+  text-shadow: 0 0 8px rgba(0, 243, 255, 0.8), 0 0 20px rgba(0, 243, 255, 0.4);
+}
+.text-glow-rose {
+  text-shadow: 0 0 8px rgba(255, 42, 95, 0.8), 0 0 20px rgba(255, 42, 95, 0.4);
+}
+.text-glow-emerald {
+  text-shadow: 0 0 8px rgba(0, 255, 157, 0.8), 0 0 20px rgba(0, 255, 157, 0.4);
+}
+
+/* Glitch effect on critical breach */
+@keyframes cyber-glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+.glitch-hover:hover {
+  animation: cyber-glitch 0.3s ease-in-out infinite;
+}
+
