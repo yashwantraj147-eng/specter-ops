@@ -2,9 +2,17 @@
 SPECTER//OPS Autonomous SOC Incident Commander & Rule Synthesizer
 Generates real Sigma & YARA rules, executes containment playbooks, and builds incident dossiers.
 """
-from datetime import datetime, timezone
-from typing import List, Dict, Any
-from app.models import AttackNode, NetworkEdge, ThreatEvent, PacketTelemetry, IncidentDossier, NodeStatus
+from datetime import UTC, datetime
+from typing import Any
+
+from app.models import (
+    AttackNode,
+    IncidentDossier,
+    NetworkEdge,
+    NodeStatus,
+    PacketTelemetry,
+    ThreatEvent,
+)
 
 
 def generate_sigma_rule(event: ThreatEvent, scenario_title: str) -> str:
@@ -22,7 +30,7 @@ description: Detects indicators associated with {scenario_title} - {event.descri
 references:
     - https://attack.mitre.org/techniques/{event.mitre_technique_id.split('.')[0]}/
 author: SPECTER//OPS Autonomous Incident Commander
-date: {datetime.now(timezone.utc).strftime('%Y/%m/%d')}
+date: {datetime.now(UTC).strftime('%Y/%m/%d')}
 tags:
     - attack.{event.mitre_technique_id.lower().replace('.', '_')}
     - attack.{event.action_type}
@@ -62,7 +70,7 @@ def generate_yara_rule(event: ThreatEvent) -> str:
     meta:
         description = "Identifies indicators associated with {event.title}"
         author = "SPECTER//OPS Rule Synthesis Engine"
-        date = "{datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
+        date = "{datetime.now(UTC).strftime('%Y-%m-%d')}"
         severity = "{event.severity.value}"
         mitre_technique = "{event.mitre_technique_id}"
     strings:
@@ -75,9 +83,9 @@ def generate_yara_rule(event: ThreatEvent) -> str:
 def execute_containment_action(
     action_type: str,
     target_id: str,
-    nodes: List[AttackNode],
-    edges: List[NetworkEdge]
-) -> Dict[str, Any]:
+    nodes: list[AttackNode],
+    edges: list[NetworkEdge]
+) -> dict[str, Any]:
     """
     Execute defensive containment actions:
     - isolate_node: Quarantines node from network
@@ -126,10 +134,10 @@ def execute_containment_action(
 
 def build_incident_dossier(
     scenario_title: str,
-    nodes: List[AttackNode],
-    edges: List[NetworkEdge],
-    events: List[ThreatEvent],
-    packets: List[PacketTelemetry]
+    nodes: list[AttackNode],
+    edges: list[NetworkEdge],
+    events: list[ThreatEvent],
+    packets: list[PacketTelemetry]
 ) -> IncidentDossier:
     """
     Synthesize complete forensic dossier report.
@@ -138,7 +146,7 @@ def build_incident_dossier(
     isolated_count = sum(1 for n in nodes if n.status == NodeStatus.ISOLATED)
 
     # MITRE coverage calculation
-    mitre_map: Dict[str, Dict[str, Any]] = {}
+    mitre_map: dict[str, dict[str, Any]] = {}
     for ev in events:
         tech = ev.mitre_technique_id
         if tech not in mitre_map:
@@ -187,9 +195,9 @@ def build_incident_dossier(
     ]
 
     return IncidentDossier(
-        incident_id=f"INC-{datetime.now(timezone.utc).strftime('%Y%m%d')}-094",
+        incident_id=f"INC-{datetime.now(UTC).strftime('%Y%m%d')}-094",
         scenario_title=scenario_title,
-        generated_at=datetime.now(timezone.utc).isoformat(),
+        generated_at=datetime.now(UTC).isoformat(),
         executive_summary=summary,
         total_compromised_nodes=compromised_count,
         isolated_nodes=isolated_count,
@@ -198,5 +206,5 @@ def build_incident_dossier(
         timeline=timeline_items,
         sigma_rules=sigma_rules,
         yara_rules=yara_rules,
-        containment_status="CONTAINED" if isolated_count >= compromised_count and compromised_count > 0 else "ACTIVE_THREAT"
+        containment_status="CONTAINED" if isolated_count >= compromised_count > 0 else "ACTIVE_THREAT"
     )

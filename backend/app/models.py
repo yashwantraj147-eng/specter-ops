@@ -1,9 +1,10 @@
 """
 SPECTER//OPS Backend Data Models
 """
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class SeverityLevel(str, Enum):
@@ -40,12 +41,12 @@ class AttackNode(BaseModel):
     node_type: NodeType
     status: NodeStatus = NodeStatus.NORMAL
     os: str = "Linux"
-    services: List[str] = Field(default_factory=list)
-    compromised_at_tick: Optional[int] = None
-    isolated_at_tick: Optional[int] = None
-    vulnerabilities: List[str] = Field(default_factory=list)
-    active_process: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
+    services: list[str] = Field(default_factory=list)
+    compromised_at_tick: int | None = None
+    isolated_at_tick: int | None = None
+    vulnerabilities: list[str] = Field(default_factory=list)
+    active_process: str | None = None
+    tags: list[str] = Field(default_factory=list)
     pos_x: float = 0.0
     pos_y: float = 0.0
 
@@ -71,9 +72,9 @@ class PacketTelemetry(BaseModel):
     protocol: str
     port: int
     payload_preview: str
-    payload_raw: Optional[str] = None
+    payload_raw: str | None = None
     is_malicious: bool = False
-    threat_signature: Optional[str] = None
+    threat_signature: str | None = None
     entropy: float = 0.0
     bytes_transferred: int = 256
 
@@ -84,7 +85,7 @@ class MitreTechnique(BaseModel):
     name: str
     description: str
     severity: SeverityLevel
-    detected_at_tick: Optional[int] = None
+    detected_at_tick: int | None = None
     evidence_count: int = 0
     confidence_score: float = 0.0
 
@@ -97,9 +98,9 @@ class ThreatEvent(BaseModel):
     description: str
     severity: SeverityLevel
     mitre_technique_id: str
-    affected_node_ids: List[str]
-    ioc_indicators: List[str]
-    payload_sample: Optional[str] = None
+    affected_node_ids: list[str]
+    ioc_indicators: list[str]
+    payload_sample: str | None = None
     action_type: str = "recon"
     is_contained: bool = False
 
@@ -121,15 +122,15 @@ class IncidentDossier(BaseModel):
     executive_summary: str
     total_compromised_nodes: int
     isolated_nodes: int
-    mitre_coverage: List[Dict[str, Any]]
-    key_iocs: List[Dict[str, str]]
-    timeline: List[Dict[str, Any]]
-    sigma_rules: List[str]
-    yara_rules: List[str]
+    mitre_coverage: list[dict[str, Any]]
+    key_iocs: list[dict[str, str]]
+    timeline: list[dict[str, Any]]
+    sigma_rules: list[str]
+    yara_rules: list[str]
     containment_status: str
 
 
 class ContainmentAction(BaseModel):
     action_type: str  # "isolate_node", "block_edge", "kill_process", "sever_c2"
     target_id: str
-    notes: Optional[str] = None
+    notes: str | None = None

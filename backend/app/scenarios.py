@@ -2,16 +2,22 @@
 SPECTER//OPS Realistic Cyber Attack Scenarios & Telemetry Data
 Defines high-fidelity APT campaigns with complete network topologies, timeline ticks, and packet streams.
 """
-from typing import List, Dict, Tuple
 from app.models import (
-    AttackNode, NetworkEdge, PacketTelemetry, ThreatEvent,
-    NodeType, NodeStatus, SeverityLevel, ScenarioMetadata, MitreTechnique
+    AttackNode,
+    NetworkEdge,
+    NodeStatus,
+    NodeType,
+    PacketTelemetry,
+    ScenarioMetadata,
+    SeverityLevel,
+    ThreatEvent,
 )
+
 
 # -------------------------------------------------------------
 # SCENARIO 1: OPERATION RED ECLIPSE (SolarWinds Supply Chain Breach)
 # -------------------------------------------------------------
-def get_operation_red_eclipse() -> Tuple[ScenarioMetadata, List[AttackNode], List[NetworkEdge], List[ThreatEvent], List[PacketTelemetry]]:
+def get_operation_red_eclipse() -> tuple[ScenarioMetadata, list[AttackNode], list[NetworkEdge], list[ThreatEvent], list[PacketTelemetry]]:
     meta = ScenarioMetadata(
         id="red_eclipse",
         title="Operation Red Eclipse: CI/CD Build-Pipeline & Cloud Pivot",
@@ -430,7 +436,7 @@ def get_operation_red_eclipse() -> Tuple[ScenarioMetadata, List[AttackNode], Lis
 # -------------------------------------------------------------
 # SCENARIO 2: BLACKBASTA V3 ENTERPRISE RANSOMWARE
 # -------------------------------------------------------------
-def get_blackbasta_ransomware() -> Tuple[ScenarioMetadata, List[AttackNode], List[NetworkEdge], List[ThreatEvent], List[PacketTelemetry]]:
+def get_blackbasta_ransomware() -> tuple[ScenarioMetadata, list[AttackNode], list[NetworkEdge], list[ThreatEvent], list[PacketTelemetry]]:
     meta = ScenarioMetadata(
         id="blackbasta",
         title="BlackBasta v3: Double-Extortion Ransomware & Domain Lockout",
@@ -702,7 +708,7 @@ def get_blackbasta_ransomware() -> Tuple[ScenarioMetadata, List[AttackNode], Lis
 # -------------------------------------------------------------
 # SCENARIO 3: PHANTOM BEACON (DNS TUNNELING EXFILTRATION)
 # -------------------------------------------------------------
-def get_phantom_beacon() -> Tuple[ScenarioMetadata, List[AttackNode], List[NetworkEdge], List[ThreatEvent], List[PacketTelemetry]]:
+def get_phantom_beacon() -> tuple[ScenarioMetadata, list[AttackNode], list[NetworkEdge], list[ThreatEvent], list[PacketTelemetry]]:
     meta = ScenarioMetadata(
         id="phantombeacon",
         title="PhantomBeacon: High-Entropy DNS Tunneling & Staged Data Theft",

@@ -4,37 +4,41 @@ Manages simulation ticks, real-time node mutations, packet broadcasting, and scr
 """
 import asyncio
 import copy
-from typing import List, Dict, Any, Set
-from fastapi import WebSocket
+from typing import Any
 
 from app.models import (
-    AttackNode, NetworkEdge, ThreatEvent, PacketTelemetry,
-    ScenarioMetadata, NodeStatus
+    AttackNode,
+    NetworkEdge,
+    NodeStatus,
+    PacketTelemetry,
+    ScenarioMetadata,
+    ThreatEvent,
 )
 from app.scenarios import load_scenario
-from app.soc_agent import execute_containment_action, build_incident_dossier
+from app.soc_agent import build_incident_dossier, execute_containment_action
+from fastapi import WebSocket, WebSocketDisconnect
 
 
 class SimulationEngine:
     def __init__(self, scenario_id: str = "red_eclipse"):
         self.scenario_id = scenario_id
         self.meta: ScenarioMetadata = None
-        self.base_nodes: List[AttackNode] = []
-        self.base_edges: List[NetworkEdge] = []
-        self.all_events: List[ThreatEvent] = []
-        self.all_packets: List[PacketTelemetry] = []
+        self.base_nodes: list[AttackNode] = []
+        self.base_edges: list[NetworkEdge] = []
+        self.all_events: list[ThreatEvent] = []
+        self.all_packets: list[PacketTelemetry] = []
 
         self.current_tick: int = 0
         self.is_playing: bool = False
         self.playback_speed: float = 1.0  # multiplier (1.0 = 2 seconds per tick)
 
         # Active mutable state
-        self.active_nodes: List[AttackNode] = []
-        self.active_edges: List[NetworkEdge] = []
-        self.contained_node_ids: Set[str] = set()
+        self.active_nodes: list[AttackNode] = []
+        self.active_edges: list[NetworkEdge] = []
+        self.contained_node_ids: set[str] = set()
 
         # WebSockets
-        self.connected_websockets: Set[WebSocket] = set()
+        self.connected_websockets: set[WebSocket] = set()
         self.worker_task: asyncio.Task = None
 
         self.reset_to_scenario(scenario_id)
@@ -77,16 +81,16 @@ class SimulationEngine:
         for cid in self.contained_node_ids:
             execute_containment_action("isolate_node", cid, self.active_nodes, self.active_edges)
 
-    def seek_tick(self, tick: int) -> Dict[str, Any]:
+    def seek_tick(self, tick: int) -> dict[str, Any]:
         self._apply_tick_state(tick)
         return self.get_full_state()
 
-    def step_forward(self) -> Dict[str, Any]:
+    def step_forward(self) -> dict[str, Any]:
         if self.current_tick < self.meta.total_ticks:
             self._apply_tick_state(self.current_tick + 1)
         return self.get_full_state()
 
-    def step_backward(self) -> Dict[str, Any]:
+    def step_backward(self) -> dict[str, Any]:
         if self.current_tick > 0:
             self._apply_tick_state(self.current_tick - 1)
         return self.get_full_state()
@@ -97,12 +101,12 @@ class SimulationEngine:
     def pause(self):
         self.is_playing = False
 
-    def isolate_node(self, node_id: str) -> Dict[str, Any]:
+    def isolate_node(self, node_id: str) -> dict[str, Any]:
         self.contained_node_ids.add(node_id)
         result = execute_containment_action("isolate_node", node_id, self.active_nodes, self.active_edges)
         return result
 
-    def auto_contain_all(self) -> Dict[str, Any]:
+    def auto_contain_all(self) -> dict[str, Any]:
         """
         Autonomous triage: automatically isolate all compromised or exfiltrating nodes.
         """
@@ -119,7 +123,7 @@ class SimulationEngine:
             "message": f"Autonomous containment activated: {len(isolated)} nodes isolated from network topology."
         }
 
-    def get_full_state(self) -> Dict[str, Any]:
+    def get_full_state(self) -> dict[str, Any]:
         # Filter packets up to current tick
         visible_packets = [p for p in self.all_packets if p.timestamp_tick <= self.current_tick]
         active_events = [ev for ev in self.all_events if ev.tick <= self.current_tick]
@@ -157,12 +161,12 @@ class SimulationEngine:
     def unregister_websocket(self, ws: WebSocket):
         self.connected_websockets.discard(ws)
 
-    async def broadcast(self, message: Dict[str, Any]):
+    async def broadcast(self, message: dict[str, Any]):
         dead_sockets = set()
         for ws in self.connected_websockets:
             try:
                 await ws.send_json(message)
-            except Exception:
+            except (WebSocketDisconnect, RuntimeError, OSError):
                 dead_sockets.add(ws)
         for dead in dead_sockets:
             self.connected_websockets.discard(dead)
@@ -190,6 +194,6 @@ class SimulationEngine:
                 await asyncio.sleep(delay)
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except (RuntimeError, OSError, ValueError) as e:
                 print(f"Error in tick loop: {e}")
                 await asyncio.sleep(1.0)

@@ -2,10 +2,13 @@
 SPECTER//OPS Mathematical Entropy & Payload Cryptanalysis Engine
 Calculates Shannon Entropy, sliding window entropy curves, and payload decoders.
 """
-import math
 import base64
+import logging
+import math
 import urllib.parse
-from typing import Dict, List, Any, Tuple
+from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_shannon_entropy(data: bytes) -> float:
@@ -19,7 +22,7 @@ def calculate_shannon_entropy(data: bytes) -> float:
         return 0.0
 
     length = len(data)
-    frequencies: Dict[int, int] = {}
+    frequencies: dict[int, int] = {}
     for byte in data:
         frequencies[byte] = frequencies.get(byte, 0) + 1
 
@@ -32,14 +35,14 @@ def calculate_shannon_entropy(data: bytes) -> float:
     return round(entropy, 4)
 
 
-def calculate_sliding_window_entropy(data: bytes, window_size: int = 32, step_size: int = 8) -> List[Dict[str, Any]]:
+def calculate_sliding_window_entropy(data: bytes, window_size: int = 32, step_size: int = 8) -> list[dict[str, Any]]:
     """
     Compute sliding window entropy to detect encrypted shellcode blocks or packed sections.
     """
     if not data:
         return []
 
-    points: List[Dict[str, Any]] = []
+    points: list[dict[str, Any]] = []
     data_len = len(data)
 
     if data_len <= window_size:
@@ -57,7 +60,7 @@ def calculate_sliding_window_entropy(data: bytes, window_size: int = 32, step_si
     return points
 
 
-def get_byte_distribution(data: bytes) -> Dict[str, Any]:
+def get_byte_distribution(data: bytes) -> dict[str, Any]:
     """
     Calculate byte category breakdown: Printable ASCII, Nulls, High Entropy (>127), Control chars.
     """
@@ -89,7 +92,7 @@ def get_byte_distribution(data: bytes) -> Dict[str, Any]:
     }
 
 
-def extract_printable_strings(data: bytes, min_length: int = 4) -> List[str]:
+def extract_printable_strings(data: bytes, min_length: int = 4) -> list[str]:
     """
     Extract readable ASCII strings of at least min_length.
     """
@@ -110,7 +113,7 @@ def extract_printable_strings(data: bytes, min_length: int = 4) -> List[str]:
 COMMON_CHARS = set(b"etaoinshrdlucmfwypvbgkjqxzETAOINSHRDLUCMFWYPVBGKJQXZ 0123456789_-\n\r\t.,/:")
 
 
-def xor_bruteforce(data: bytes) -> List[Dict[str, Any]]:
+def xor_bruteforce(data: bytes) -> list[dict[str, Any]]:
     """
     Brute-force 1-byte XOR keys (0x01 through 0xFF) and score the output based on
     printable ASCII and standard text character frequency.
@@ -130,11 +133,7 @@ def xor_bruteforce(data: bytes) -> List[Dict[str, Any]]:
         # Weighted score: 30% general printable, 70% common text characters
         score = (printable * 0.3 + common * 0.7) / total_len
         if score > 0.45:
-            preview = ""
-            try:
-                preview = decrypted.decode("utf-8", errors="replace")[:60]
-            except Exception:
-                preview = "".join(chr(b) if 32 <= b <= 126 else "." for b in decrypted[:60])
+            preview = decrypted.decode("utf-8", errors="replace")[:60]
             candidates.append({
                 "key": f"0x{key:02X}",
                 "key_int": key,
@@ -146,7 +145,7 @@ def xor_bruteforce(data: bytes) -> List[Dict[str, Any]]:
     return candidates[:5]
 
 
-def decode_payload(payload_str: str) -> Dict[str, Any]:
+def decode_payload(payload_str: str) -> dict[str, Any]:
     """
     Analyze, decode and unpack a raw payload string (supports Hex, Base64, Raw, and XOR detection).
     """
@@ -163,8 +162,8 @@ def decode_payload(payload_str: str) -> Dict[str, Any]:
             raw_bytes = bytes.fromhex(hex_candidate)
             is_hex = True
             detection_format = "hex"
-    except Exception:
-        pass
+    except ValueError as exc:
+        logger.debug("Hex decode skipped: %s", exc)
 
     # Try Base64 if not hex
     if not is_hex:
@@ -178,8 +177,8 @@ def decode_payload(payload_str: str) -> Dict[str, Any]:
             if len(decoded_b64) > 3:
                 raw_bytes = decoded_b64
                 detection_format = "base64"
-        except Exception:
-            pass
+        except ValueError as exc:
+            logger.debug("Base64 decode skipped: %s", exc)
 
     # Fallback to UTF-8 encoded bytes
     if not raw_bytes:
@@ -193,16 +192,12 @@ def decode_payload(payload_str: str) -> Dict[str, Any]:
     xor_hits = xor_bruteforce(raw_bytes) if len(raw_bytes) >= 8 else []
 
     # Try standard ROT13
-    rot13_candidate = ""
-    try:
-        rot13_candidate = clean_str.translate(
-            str.maketrans(
-                "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz",
-                "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm"
-            )
+    rot13_candidate = clean_str.translate(
+        str.maketrans(
+            "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz",
+            "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm"
         )
-    except Exception:
-        pass
+    )
 
     # Try URL decode
     url_decoded = urllib.parse.unquote(clean_str)

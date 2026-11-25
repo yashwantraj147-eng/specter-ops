@@ -3,8 +3,8 @@ SPECTER//OPS Backend Unit & Integration Tests
 Validates Shannon entropy calculations, scenario loaders, simulation state machine,
 Sigma/YARA rule generation, and containment actions.
 """
-import sys
 import os
+import sys
 
 # Add backend directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -12,14 +12,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from app.entropy import (
     calculate_shannon_entropy,
     calculate_sliding_window_entropy,
-    get_byte_distribution,
+    decode_payload,
     xor_bruteforce,
-    decode_payload
 )
-from app.scenarios import load_scenario, ALL_SCENARIO_LOADERS
+from app.models import NodeStatus, SeverityLevel, ThreatEvent
+from app.scenarios import ALL_SCENARIO_LOADERS, load_scenario
 from app.simulation import SimulationEngine
-from app.soc_agent import generate_sigma_rule, generate_yara_rule, execute_containment_action
-from app.models import NodeStatus, ThreatEvent, SeverityLevel
+from app.soc_agent import generate_sigma_rule, generate_yara_rule
 
 
 def test_shannon_entropy_bounds():
@@ -80,7 +79,7 @@ def test_xor_bruteforce():
 
 def test_all_scenarios_loadable():
     for sc_id in ALL_SCENARIO_LOADERS:
-        meta, nodes, edges, events, packets = load_scenario(sc_id)
+        meta, nodes, edges, events, _packets = load_scenario(sc_id)
         assert meta.id == sc_id
         assert len(nodes) >= 3
         assert len(edges) >= 2

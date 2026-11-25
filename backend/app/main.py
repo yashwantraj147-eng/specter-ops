@@ -4,16 +4,13 @@ Provides WebSocket streaming and REST APIs for threat simulation, forensic analy
 """
 import asyncio
 from contextlib import asynccontextmanager
-from typing import Dict, Any, Optional
-from pydantic import BaseModel
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-
-from app.simulation import SimulationEngine
 from app.entropy import decode_payload
 from app.scenarios import ALL_SCENARIO_LOADERS
-
+from app.simulation import SimulationEngine
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 # Global simulation engine instance
 sim_engine = SimulationEngine(scenario_id="red_eclipse")
@@ -87,7 +84,7 @@ async def health_check():
 @app.get("/api/scenarios")
 async def get_scenarios():
     scenarios_list = []
-    for sc_id, loader in ALL_SCENARIO_LOADERS.items():
+    for loader in ALL_SCENARIO_LOADERS.values():
         meta, _, _, _, _ = loader()
         scenarios_list.append(meta.model_dump())
     return {"scenarios": scenarios_list}
@@ -213,5 +210,5 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text("PONG")
     except WebSocketDisconnect:
         sim_engine.unregister_websocket(websocket)
-    except Exception:
+    except (RuntimeError, OSError, ValueError):
         sim_engine.unregister_websocket(websocket)
